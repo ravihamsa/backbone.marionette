@@ -8,6 +8,7 @@
     "jQuery"             : true,
     "_"                  : true,
     "Backbone"           : true,
+    "Handlebars"           : true,
     "Marionette"         : true,
     "slice"              : true,
     "throwError"         : true

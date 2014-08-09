@@ -119,5 +119,7 @@ Marionette.Model = Backbone.Model.extend({
 
     },
     /* jshint ignore:end */
+    triggerMethod: Marionette.triggerMethod,
+    normalizeMethods: Marionette.normalizeMethods,
     getOption: Marionette.proxyGetOption
 });

@@ -62,5 +62,7 @@
   // @include ../marionette.application.js
   // @include ../marionette.module.js
 
+  // @include ../marionette.model.js
+  // @include ../marionette.selectable.js
   return Marionette;
 }));
