@@ -64,4 +64,6 @@
 
     // @include ../marionette.model.js
     // @include ../marionette.selectable.js
+    
+    // @include ../marionette.helperbehaviors.js
 }));

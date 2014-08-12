@@ -55,6 +55,7 @@
   // @include ../marionette.compositeview.js
   // @include ../marionette.layoutview.js
 
+
   // @include ../marionette.behavior.js
   // @include ../marionette.behaviors.js
 
@@ -62,7 +63,10 @@
   // @include ../marionette.application.js
   // @include ../marionette.module.js
 
+
   // @include ../marionette.model.js
   // @include ../marionette.selectable.js
+
+  // @include ../marionette.helperbehaviors.js
   return Marionette;
 }));
