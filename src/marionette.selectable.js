@@ -45,14 +45,16 @@ var ItemModel = Marionette.Model.extend({
 var ItemView = Marionette.ItemView.extend({
     tagName: 'li',
     className: 'single-select-item',
-    template: '<a href="#select" data-id="{{id}}" class="action">{{#if showIcon}}<em class="icon"></em>{{/if}}{{name}}</a>',
-    actionHandler: function (action, actionParams, e) {
-        if (action === 'select' && this.model.is('selectable')) {
+    template: '<a href="#select" data-id="<%=id%>" class="action"><% if (showIcon){ %><em class="icon"></em><% } %> <%=name%></a>',
+    behaviours:{
+        AnchorActions:{}
+    },
+    onActionSelect:function(){
+        if (this.model.is('selectable')) {
             this.model.triggerSelect();
         }
-        e.actionHandled = true;
     },
-    changeHandler: function () {
+    onChange: function () {
         this.render();
         this.$el.toggleClass('active', this.model.is('selected'));
         this.$el.toggleClass('disabled', this.model.isNot('selectable'));
