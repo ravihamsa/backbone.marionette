@@ -65,8 +65,8 @@
 
 
   // @include ../marionette.model.js
+  // @include ../marionette.template.js
   // @include ../marionette.selectable.js
-
-  // @include ../marionette.helperbehaviors.js
+    
   return Marionette;
 }));
