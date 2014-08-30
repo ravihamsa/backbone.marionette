@@ -40,9 +40,9 @@ var ItemModel = Marionette.Model.extend({
 
 var ItemView = Marionette.ItemView.extend({
     tagName: 'li',
-    className: 'single-select-item',
+    className: 'list-item',
     getTemplate:function(){
-        return Marionette.templateLookup('selectableItem');
+        return Marionette.templateLookup('selectable.item');
     },
     behaviors:{
         AnchorActions:{},
@@ -107,13 +107,19 @@ var SingleSelectModel = Marionette.Model.extend({
             if(this._selected){
                 this._selected.deselect();
             }
-            this._selected = model;
+            this.setSelected(model);
             model.select();
         });
         _this.readSelection();
     },
     readSelection: function(){
-        this._selected = this.listCollection.find(function(model){return model.is('selected');});
+        this.setSelected(this.listCollection.find(function(model){return model.is('selected');}));
+    },
+    setSelected: function(model){
+        if(!this._selected || this._selected.id !== model.id){
+            this._selected = model;
+            this.trigger('selectionChange');
+        }
     },
     getSelected: function(){
         return this._selected;
@@ -122,6 +128,20 @@ var SingleSelectModel = Marionette.Model.extend({
         if(this._selected){
             return this._selected.id;
         }
+    },
+    getSelectedName: function(){
+        if(this._selected){
+            return this._selected.get('name');
+        }else{
+            return Marionette.stringLookup('nothing.selected');
+        }
+
+    },
+    getListLength: function(){
+        return this.listCollection.length;
+    },
+    getCollection: function(){
+        return this.get('items');
     }
 });
 
@@ -139,11 +159,13 @@ var MultiSelectModel = Marionette.Model.extend({
         _this.listenTo(coll, 'selectItem', function(model){
             _this._selectedIndex[model.id]=model;
             model.select();
+            _this.trigger('selectionChange');
         });
 
         _this.listenTo(coll, 'deSelectItem', function(model){
             delete _this._selectedIndex[model.id];
             model.deselect();
+            _this.trigger('selectionChange');
         });
 
         _this.listenTo(coll, 'toggleSelectItem', function(model){
@@ -163,19 +185,81 @@ var MultiSelectModel = Marionette.Model.extend({
                 coll.trigger('selectItem', model);
             }
         });
+        this.trigger('selectionChange');
     },
     getSelected:function(){
         return _.values(this._selectedIndex);
     },
     getSelectedIds:function(){
         return _.keys(this._selectedIndex);
+    },
+    getSelectedNames: function(){
+        return _.map(this.getSelected(), function(model){
+            return model.get('name');
+        });
+    },
+    getCollection: function(){
+        return this.get('items');
+    },
+    getListLength: function(){
+        return this.listCollection.length;
+    }
+});
+
+var SingleSelectSummaryView = Marionette.ItemView.extend({
+    modelEvents:{
+      selectionChange:'render'
+    },
+    getTemplate:function(){
+        return Marionette.templateLookup('single.select.summary');
+    },
+    serializeData: function(){
+        var model = this.model;
+        var summary;
+        if(model.getListLength() === 0){
+            summary =  Marionette.stringLookup('no.options');
+        }else if(!model.getSelected()){
+            summary = Marionette.stringLookup('no.selection');
+        }else{
+            summary = model.getSelectedName();
+        }
+        return {
+            summary:summary
+        };
+    }
+});
+
+var MultiSelectSummaryView = SingleSelectSummaryView.extend({
+    getTemplate:function(){
+        return Marionette.templateLookup('multi.select.summary');
+    },
+    serializeData:function(){
+        var model = this.model;
+        var summary, selectedCount = 0, selected = model.getSelected();
+        if(model.getListLength() === 0){
+            summary =  Marionette.stringLookup('no.options');
+        }else if(selected.length === 0){
+            summary = Marionette.stringLookup('no.selection');
+        }else{
+            selectedCount = selected.length;
+            if(selected.length < 3){
+                summary = model.getSelectedNames();
+            }else{
+                summary = Marionette.stringLookup('selected');
+            }
+        }
+        return {
+            summary:summary,
+            selectedCount:selectedCount
+        };
     }
 });
 
 var SingleSelectView = Marionette.LayoutView.extend({
-    template: _.template('<div class="list-container"> </div>'),
+    template: _.template('<div class="js-list-container"> </div><div class="js-summary-container single-select-list"> </div>'),
     regions:{
-        listContainer:'.list-container'
+        listContainer:'.js-list-container',
+        summaryContainer:'.js-summary-container'
     },
     onShow: function(){
         var CollectionView = this.getOption('CollectionView') || Marionette.CollectionView;
@@ -184,14 +268,18 @@ var SingleSelectView = Marionette.LayoutView.extend({
             collection:collection,
             childView:SingleSelectItemView
         }));
+        var showSummary = this.getOption('showSummary') || false;
+        if(showSummary){
+            this.summaryContainer.show(new SingleSelectSummaryView({
+                model:this.model
+            }));
+        }
+
     }
 });
 
-var MultiSelectView = Marionette.LayoutView.extend({
-    template: _.template('<div class="list-container"> </div>'),
-    regions:{
-        listContainer:'.list-container'
-    },
+var MultiSelectView = SingleSelectView.extend({
+    template: _.template('<div class="js-list-container"> </div><div class="js-summary-container multi-select-list"> </div>'),
     onShow: function(){
         var CollectionView = this.getOption('CollectionView') || Marionette.CollectionView;
         var collection = this.model.listCollection;
@@ -199,6 +287,13 @@ var MultiSelectView = Marionette.LayoutView.extend({
             collection:collection,
             childView:MultiSelectItemView
         }));
+
+        var showSummary = this.getOption('showSummary') || false;
+        if(showSummary){
+            this.summaryContainer.show(new MultiSelectSummaryView({
+                model:this.model
+            }));
+        }
     }
 });
 
@@ -211,9 +306,11 @@ Marionette.Selectable = {
     SingleSelectItemView:SingleSelectItemView,
     SingleSelectCollection:SingleSelectCollection,
     SingleSelectView:SingleSelectView,
+    SingleSelectSummaryView:SingleSelectSummaryView,
     SingleSelectModel:SingleSelectModel,
     MultiSelectItemView:MultiSelectItemView,
     MultiSelectCollection:MultiSelectCollection,
     MultiSelectView:MultiSelectView,
-    MultiSelectModel:MultiSelectModel
+    MultiSelectModel:MultiSelectModel,
+    MultiSelectSummaryView:MultiSelectSummaryView
 };

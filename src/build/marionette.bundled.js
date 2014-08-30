@@ -66,6 +66,7 @@
 
   // @include ../marionette.model.js
   // @include ../marionette.template.js
+  // @include ../marionette.strings.js
   // @include ../marionette.selectable.js
     
   return Marionette;
