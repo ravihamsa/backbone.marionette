@@ -63,6 +63,7 @@ var ItemView = Marionette.ItemView.extend({
         this.$el.toggleClass('active', this.model.is('selected'));
         this.$el.toggleClass('disabled', this.model.isNot('selectable'));
     }
+
 });
 
 
@@ -277,6 +278,7 @@ var SingleSelectView = Marionette.LayoutView.extend({
 
     }
 });
+
 
 var MultiSelectView = SingleSelectView.extend({
     template: _.template('<div class="js-list-container"> </div><div class="js-summary-container multi-select-list"> </div>'),
