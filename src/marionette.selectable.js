@@ -117,10 +117,14 @@ var SingleSelectModel = Marionette.Model.extend({
         this.setSelected(this.listCollection.find(function(model){return model.is('selected');}));
     },
     setSelected: function(model){
+        var prevSelected = this._selected;
         if(!this._selected || this._selected.id !== model.id){
             this._selected = model;
-            this.trigger('selectionChange');
+            this.trigger('selectionChange', model, prevSelected);
         }
+    },
+    setSelectedById: function(modelId){
+        this.setSelected(this.listCollection.get(modelId));
     },
     getSelected: function(){
         return this._selected;
@@ -143,6 +147,12 @@ var SingleSelectModel = Marionette.Model.extend({
     },
     getCollection: function(){
         return this.get('items');
+    },
+    getSelectedIndex: function(){
+        return this.listCollection.indexOf(this.getSelected());
+    },
+    getItemById: function(id){
+        return this.listCollection.get(id);
     }
 });
 
@@ -208,6 +218,7 @@ var MultiSelectModel = Marionette.Model.extend({
 });
 
 var SingleSelectSummaryView = Marionette.ItemView.extend({
+    tagName:'span',
     modelEvents:{
       selectionChange:'render'
     },
@@ -231,6 +242,7 @@ var SingleSelectSummaryView = Marionette.ItemView.extend({
 });
 
 var MultiSelectSummaryView = SingleSelectSummaryView.extend({
+    tagName:'span',
     getTemplate:function(){
         return Marionette.templateLookup('multi.select.summary');
     },
@@ -267,7 +279,7 @@ var SingleSelectView = Marionette.LayoutView.extend({
         var collection = this.model.listCollection;
         this.listContainer.show(new CollectionView({
             collection:collection,
-            childView:SingleSelectItemView
+            childView:this.getOption('childView') || SingleSelectItemView
         }));
         var showSummary = this.getOption('showSummary') || false;
         if(showSummary){
